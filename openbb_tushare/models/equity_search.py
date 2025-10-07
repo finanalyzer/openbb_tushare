@@ -12,6 +12,12 @@ from openbb_core.provider.utils.descriptions import (
     QUERY_DESCRIPTIONS,
 )
 from pydantic import Field
+import logging
+from openbb_tushare import project_name
+from mysharelib.tools import setup_logger
+
+setup_logger(project_name)
+logger = logging.getLogger(__name__)
 
 
 class TushareEquitySearchQueryParams(EquitySearchQueryParams):
@@ -57,13 +63,22 @@ class TushareEquitySearchFetcher(
 
         from openbb_tushare.utils.ts_equity_search import get_symbols
         api_key = credentials.get("tushare_api_key") if credentials else ""
+        data = get_symbols(query.use_cache, api_key=api_key)
+        if query.limit: data = data.head(query.limit)
 
-        return get_symbols(query.use_cache, api_key=api_key).to_dict(orient="records")
+        return data.to_dict(orient="records")
 
     @staticmethod
     def transform_data(
         query: TushareEquitySearchQueryParams, data: Dict, **kwargs: Any
     ) -> List[TushareEquitySearchData]:
         """Transform the data to the standard format."""
+        if query.query:
+            filtered = [
+                d for d in data
+                if query.query in d.get('name', '') or query.query in d.get('symbol', '')
+            ]
+            logger.info(f"Searching for {query.query} and found {len(filtered)} results.")
+            return [TushareEquitySearchData.model_validate(d) for d in filtered]
 
         return [TushareEquitySearchData.model_validate(d) for d in data]
