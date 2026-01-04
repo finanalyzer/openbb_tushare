@@ -38,11 +38,11 @@ def get_tushare_data(
     ) -> pd.DataFrame:
     tushare_api_key = get_api_key(api_key)
     pro = ts.pro_api(tushare_api_key)
-    _, _, market = normalize_symbol(symbol)
+    _, normalized_ts_code, market = normalize_symbol(symbol)
     if market == 'HK':
-        cash_flow_df = pro.hk_cashflow(ts_code=symbol)
+        cash_flow_df = pro.hk_cashflow(ts_code=normalized_ts_code)
     else:
-        cash_flow_df = pro.cashflow(ts_code=symbol)
+        cash_flow_df = pro.cashflow(ts_code=normalized_ts_code)
         cash_flow_df = cash_flow_df.drop_duplicates(subset='end_date', keep='first')
     
     return cash_flow_df

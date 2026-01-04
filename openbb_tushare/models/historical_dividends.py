@@ -15,6 +15,8 @@ from openbb_core.provider.standard_models.historical_dividends import (
     HistoricalDividendsQueryParams,
 )
 
+from openbb_tushare.utils.tools import normalize_tushare_symbol_list, validate_iso_yyyy_mm_dd
+
 import logging
 from openbb_tushare.utils.tools import setup_logger
 setup_logger()
@@ -26,6 +28,19 @@ class TushareHistoricalDividendsQueryParams(HistoricalDividendsQueryParams):
         default=True,
         description="Whether to use a cached request. The quote is cached for one hour.",
     )
+
+    @field_validator("symbol", mode="before", check_fields=False)
+    @classmethod
+    def _normalize_symbol(cls, v: object) -> object:
+        if v is None:
+            return v
+        return normalize_tushare_symbol_list(str(v))
+
+    @field_validator("start_date", "end_date", mode="before", check_fields=False)
+    @classmethod
+    def _validate_input_dates(cls, v: object, info):  # pylint: disable=unused-argument
+        field_name = getattr(info, "field_name", "date")
+        return validate_iso_yyyy_mm_dd(v, field_name)
 
 
 class TushareHistoricalDividendsData(HistoricalDividendsData):
@@ -66,7 +81,6 @@ class TushareHistoricalDividendsFetcher(
     ) -> List[Dict]:
         """Extract the raw data from Tushare."""
         # pylint: disable=import-outside-toplevel
-        from openbb_tushare.utils.tools import normalize_symbol
         from openbb_tushare.utils.ts_historical_dividends import get_dividends
         api_key = credentials.get("tushare_api_key") if credentials else ""
 

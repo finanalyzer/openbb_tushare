@@ -45,7 +45,8 @@ def get_tushare_data(
     ) -> pd.DataFrame:
     tushare_api_key = get_api_key(api_key)
     pro = ts.pro_api(tushare_api_key)
-    div_df = pro.dividend(ts_code=symbol)
+    _, normalized_ts_code, _ = normalize_symbol(symbol)
+    div_df = pro.dividend(ts_code=normalized_ts_code)
     div_df = div_df[div_df['cash_div'] != 0].reset_index(drop=True)
     div_df = div_df.rename(columns={'cash_div':'amount', 'ex_date':'ex_dividend_date'})
     div_df['ex_dividend_date'] = pd.to_datetime(div_df['ex_dividend_date'], format='%Y%m%d')

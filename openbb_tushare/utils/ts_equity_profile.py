@@ -118,22 +118,22 @@ def get_equity_profile(ts_code: str, api_key: str = "", use_cache: bool = True) 
     """
 
     cache = TableCache(EQUITY_INFO_SCHEMA, table_name="equity_profile", primary_key="ts_code")
+    _, normalized_ts_code, market = normalize_symbol(ts_code)
     if use_cache:
-        filters = {'ts_code': ts_code}
+        filters = {'ts_code': normalized_ts_code}
         data = cache.read_rows(filters)
 
         if not data.empty:
-            logger.info(f"Loading equity profile {ts_code} from cache...")
+            logger.info(f"Loading equity profile {normalized_ts_code} from cache...")
             return data
 
     tushare_api_key = get_api_key(api_key)
     pro = ts.pro_api(tushare_api_key)
-    symbol_b, symbol, market = normalize_symbol(ts_code)
     df_data = pd.DataFrame()
     if market == 'HK':
-        df_data = get_hk_data(ts_code, pro, cache)
+        df_data = get_hk_data(normalized_ts_code, pro, cache)
     else:
-        df_data = get_ss_data(ts_code, pro, cache)
+        df_data = get_ss_data(normalized_ts_code, pro, cache)
 
     return df_data
 

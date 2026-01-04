@@ -76,8 +76,7 @@ def get_from_cache(
         logger.info(f"Getting equity {ts_code} historical data from cache...")
         return data_from_cache
 
-    # If not in cache, download data
-    # Download data using AKShare
+    # If not in cache, download data from Tushare API
     data_util_today_df = get_one(ts_code, period=period,api_key=api_key, start_date=start_dt, end_date=end_dt)
     cache.write_dataframe(data_util_today_df)
     
@@ -94,14 +93,26 @@ def get_one(
     tushare_api_key = get_api_key(api_key)
 
     pro = ts.pro_api(tushare_api_key)
-    symbol_b, symbol, market = normalize_symbol(ts_code)
+    _, normalized_ts_code, market = normalize_symbol(ts_code)
+    
+    # Convert dates to tushare format (YYYYMMDD)
+    if isinstance(start_date, dateType):
+        start_date_str = start_date.strftime("%Y%m%d")
+    else:
+        start_date_str = start_date
+    
+    if isinstance(end_date, dateType):
+        end_date_str = end_date.strftime("%Y%m%d")
+    else:
+        end_date_str = end_date
+    
     df_data = pd.DataFrame()
     if market == 'HK':
-        df_data = pro.hk_daily(ts_code=ts_code)
-        logger.info(f"Downloaed historical data (HK) {ts_code}: {len(df_data)}.")
+        df_data = pro.hk_daily(ts_code=normalized_ts_code, start_date=start_date_str, end_date=end_date_str)
+        logger.info(f"Downloaded historical data (HK) {normalized_ts_code}: {len(df_data)} rows from {start_date_str} to {end_date_str}.")
     else:
-        df_data = pro.daily(ts_code=ts_code)
-        logger.info(f"Downloaed historical data {ts_code}: {len(df_data)}.")
+        df_data = pro.daily(ts_code=normalized_ts_code, start_date=start_date_str, end_date=end_date_str)
+        logger.info(f"Downloaded historical data {normalized_ts_code}: {len(df_data)} rows from {start_date_str} to {end_date_str}.")
 
     df_data = df_data.rename(columns={'trade_date':'date', 'vol':'volume', "pct_chg":"change_percent"})
     if 'ts_code' in df_data.columns:

@@ -10,9 +10,9 @@ from openbb_core.provider.standard_models.equity_quote import (
     EquityQuoteData,
     EquityQuoteQueryParams,
 )
-from pydantic import Field
+from pydantic import Field, field_validator
 import logging
-from openbb_tushare.utils.tools import setup_logger, normalize_symbol
+from openbb_tushare.utils.tools import setup_logger, normalize_tushare_symbol_list
 
 setup_logger()
 logger = logging.getLogger(__name__)
@@ -26,6 +26,13 @@ class TushareEquityQuoteQueryParams(EquityQuoteQueryParams):
         default=True,
         description="Whether to use a cached request. The quote is cached for one hour.",
     )
+
+    @field_validator("symbol", mode="before", check_fields=False)
+    @classmethod
+    def _normalize_symbol(cls, v: object) -> object:
+        if v is None:
+            return v
+        return normalize_tushare_symbol_list(str(v))
 
 
 class TushareEquityQuoteData(EquityQuoteData):
@@ -64,10 +71,17 @@ class TushareEquityQuoteFetcher(
         for symbol in symbols:
             try:        
                 data = get_one(symbol, query.use_cache, api_key=api_key)
-                all_data.append(data.to_dict(orient="records")[0])
+                if data is None or data.empty:
+                    logger.warning(f"No data returned for symbol {symbol}")
+                    continue
+                records = data.to_dict(orient="records")
+                if records:
+                    all_data.append(records[0])
+                else:
+                    logger.warning(f"Empty records for symbol {symbol}")
                 
             except Exception as e:
-                print(f"Error fetching data for symbol {symbol}: {e}")
+                logger.error(f"Error fetching data for symbol {symbol}: {e}")
                 continue
 
         return all_data
