@@ -1,6 +1,6 @@
 import pytest
 import pandas as pd
-from openbb_tushare.utils.table_cache import TableCache
+from mysharelib.table_cache import TableCache
 
 @pytest.fixture
 def test_db_path(tmp_path):

@@ -2,16 +2,14 @@ import logging
 import pandas as pd
 import tushare as ts
 from datetime import (
-    date as dateType,
-    datetime,
+    date as dateType
 )
-from typing import Optional, Union
-from openbb_tushare.utils.tools import setup_logger
+from typing import Optional
+from mysharelib.tools import setup_logger, normalize_symbol
 from openbb_tushare.utils.helpers import get_api_key
-from openbb_tushare.utils.tools import normalize_symbol
-from openbb_tushare.utils.table_cache import TableCache
+from openbb_tushare import project_name
 
-setup_logger()
+setup_logger(project_name)
 logger = logging.getLogger(__name__)
 
 def get_dividends(
@@ -30,8 +28,9 @@ def get_dividends(
         use_cache (bool): Whether to use cached data.
         api_key (str): Tushare API key.
     """
-    from openbb_tushare.utils.blob_cache import BlobCache
-    cache = BlobCache(table_name="historical_dividends")
+    from mysharelib.blob_cache import BlobCache
+    
+    cache = BlobCache(table_name="historical_dividends", project=project_name)
     data = cache.load_cached_data(symbol, "annual", use_cache, get_tushare_data, api_key=api_key)
     if start_date is None or end_date is None:
         return data
