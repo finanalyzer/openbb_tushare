@@ -17,7 +17,12 @@ from openbb_core.provider.utils.descriptions import (
     QUERY_DESCRIPTIONS,
 )
 from openbb_core.provider.utils.errors import EmptyDataError
-from pydantic import Field
+from pydantic import Field, ValidationInfo, field_validator
+
+from openbb_tushare.utils.tools import (
+    normalize_tushare_symbol_list,
+    validate_iso_yyyy_mm_dd,
+)
 
 
 class TushareEquityHistoricalQueryParams(EquityHistoricalQueryParams):
@@ -39,6 +44,18 @@ class TushareEquityHistoricalQueryParams(EquityHistoricalQueryParams):
         default=True,
         description="Whether to use a cached request. The quote is cached for one hour.",
     )
+
+    @field_validator("symbol", mode="before", check_fields=False)
+    @classmethod
+    def _normalize_symbol(cls, v: object) -> object:
+        if v is None:
+            return v
+        return normalize_tushare_symbol_list(str(v))
+
+    @field_validator("start_date", "end_date", mode="before", check_fields=False)
+    @classmethod
+    def _validate_dates(cls, v: object, info: ValidationInfo) -> object:
+        return validate_iso_yyyy_mm_dd(v, info.field_name)
 
 class TushareEquityHistoricalData(EquityHistoricalData):
     """Tushare Equity Historical Price Data."""

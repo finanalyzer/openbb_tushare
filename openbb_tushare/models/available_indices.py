@@ -28,6 +28,10 @@ class TushareAvailableIndicesQueryParams(AvailableIndicesQueryParams):
 class TushareAvailableIndicesData(AvailableIndicesData):
     """Tushare Available Indices Data."""
 
+    __alias_dict__ = {
+        "symbol": "ts_code",
+    }
+
 class TushareAvailableIndicesFetcher(
     Fetcher[
         TushareAvailableIndicesQueryParams,

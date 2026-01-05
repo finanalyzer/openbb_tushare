@@ -10,8 +10,10 @@ from openbb_core.provider.standard_models.equity_info import (
     EquityInfoData,
     EquityInfoQueryParams,
 )
-from pydantic import Field, field_validator
+from pydantic import Field, ValidationInfo, field_validator
 import pandas as pd
+
+from openbb_tushare.utils.tools import normalize_tushare_symbol_list
 
 
 class TushareEquityProfileQueryParams(EquityInfoQueryParams):
@@ -23,6 +25,13 @@ class TushareEquityProfileQueryParams(EquityInfoQueryParams):
         default=True,
         description="Whether to use a cached request. The quote is cached for one hour.",
     )
+
+    @field_validator("symbol", mode="before", check_fields=False)
+    @classmethod
+    def _normalize_symbol(cls, v: object) -> object:
+        if v is None:
+            return v
+        return normalize_tushare_symbol_list(str(v))
 
 class TushareEquityProfileData(EquityInfoData):
     """Tushare Equity Profile Data."""

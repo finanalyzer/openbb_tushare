@@ -16,6 +16,8 @@ from openbb_core.provider.standard_models.income_statement import (
 from openbb_core.provider.utils.descriptions import QUERY_DESCRIPTIONS
 from pydantic import Field, field_validator
 
+from openbb_tushare.utils.tools import normalize_tushare_symbol_list
+
 
 class TushareIncomeStatementQueryParams(IncomeStatementQueryParams):
     """Tushare Income Statement Query.
@@ -37,6 +39,13 @@ class TushareIncomeStatementQueryParams(IncomeStatementQueryParams):
         default=True,
         description="Whether to use a cached request. The quote is cached for one hour.",
     )
+
+    @field_validator("symbol", mode="before", check_fields=False)
+    @classmethod
+    def _normalize_symbol(cls, v: object) -> object:
+        if v is None:
+            return v
+        return normalize_tushare_symbol_list(str(v))
 
 
 class TushareIncomeStatementData(IncomeStatementData):
