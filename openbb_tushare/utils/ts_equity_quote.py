@@ -14,7 +14,7 @@ def get_one(ts_code : str, use_cache: bool = True, api_key : str = "") -> pd.Dat
     tushare_api_key = get_api_key(api_key)
 
     logger.info(f"Getting equity quote data for {ts_code}...")
-    _, _, market = normalize_symbol(ts_code)
+    symbol_b, symbol, market = normalize_symbol(ts_code)
     logger.info(f"Normalized symbol: base={symbol_b}, full={symbol}, market={market}")
     df_data = pd.DataFrame()
     if market == 'HK':

@@ -5,7 +5,7 @@ from datetime import (
     date as dateType
 )
 from typing import Optional
-from mysharelib.tools import setup_logger
+from mysharelib.tools import setup_logger, normalize_symbol
 from openbb_tushare.utils.helpers import get_api_key
 from openbb_tushare import project_name
 
